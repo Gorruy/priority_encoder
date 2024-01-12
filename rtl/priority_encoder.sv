@@ -19,25 +19,25 @@ always_ff @(posedge clk_i)
     if ( srst_i == 1 )
       begin
         data_left_o  <= '0;
-        data_rigth_o <= '0;
+        data_right_o <= '0;
         data_val_o   <= 0;
       end
     else
       begin
-        if ( data_val_i == 1 )pointer
+        if ( data_val_i == 1 )
           begin
-            pointer = MIDDLE - 1;
+            pointer <= MIDDLE - 1;
             data_right_o <= ( ( ~data_i + 1 ) ^ data_i );
-            while (1)
+            for ( int i = 0; i < MIDDLE; i++ )
               begin
-                if ( data_i[pointer: DATA_BUS_WIDTH - 1] == 1)
+                if ( ( data_i >> pointer ) == 1)
                   break;
-                else if ( data_i[pointer: DATA_BUS_WIDTH - 1] == 0 )
+                else if ( ( data_i >> pointer )== 0 )
                   pointer <= pointer - ( pointer >> 1 );
                 else
-                  pointer <= pointer + ( ( DATA_BUS_WIDTH - 1 - pointer ) >> 1 );
+                  pointer <= pointer + ( ( WIDTH - 1 - pointer ) >> 1 );
               end
-            data_left_o <= { data_i[pointer: DATA_BUS_WIDTH - 1] , (DATA_BUS_WIDTH - 1 - pointer)'(0) }
+            data_left_o <= { (WIDTH - 1 - pointer)'( data_i >> pointer ), (WIDTH - 1 - pointer)'(0) };
           end
         else
           data_left_o  <= '0;
