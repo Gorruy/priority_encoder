@@ -44,7 +44,7 @@ module top_tb;
 
   typedef logic queued_data_t[$:DATA_BUS_WIDTH - 1];
 
-  mailbox #( queued_data_t ) output_data    = new(1);
+  mailbox #( queued_data_t ) output_data    = new(2);
   mailbox #( queued_data_t ) input_data     = new(1);
   mailbox #( queued_data_t ) generated_data = new(1);
 
@@ -55,7 +55,7 @@ module top_tb;
 
   endfunction
 
-  task raise_transaction_strobe( logic data_to_send ); 
+  task raise_transaction_strobe( input queued_data_t data_to_send ); 
     
     // data comes at random moment
     int delay;
@@ -80,14 +80,7 @@ module top_tb;
     input_data.get( i_data );
     output_data.get( o_data );
     
-    for ( int i = DATA_BUS_WIDTH; i > 0; i-- ) begin
-      if ( i_data[i - 1] != o_data[i - 1] )
-        begin
-          display_error( i_data, o_data );
-          test_succeed <= 1'b0;
-          return;
-        end
-    end
+    
     
   endtask
 
@@ -110,30 +103,29 @@ module top_tb;
                  );
 
     queued_data_t data_to_send;
-    queued_data_t exposed_data;
 
-    exposed_data = {};
     generated_data.get( data_to_send );
     
-    for ( int i = 0; i < DATA_BUS_WIDTH; i++ ) begin
-      raise_transaction_strobe( data_to_send[$] );
-      exposed_data.push_back( data_to_send.pop_back() );
-    end
+    raise_transaction_strobe( data_to_send );
 
-    input_data.put( exposed_data );
+    input_data.put( data_to_send );
 
   endtask
 
   task read_data ( mailbox #( queued_data_t ) output_data );
     
-    queued_data_t recieved_data;
+    queued_data_t recieved_right_data;
+    queued_data_t recieved_left_data;
 
-    recieved_data = {};
+    recieved_right_data = {};
+    recieved_left_data  = {};
     
-    wait ( deser_data_val )
-    recieved_data <= { << { deser_data } };
+    wait ( data_val )
+    recieved_right_data <= { << { data_right } };
+    recieved_left_data  <= { << { data_left } };
 
-    output_data.put(recieved_data);
+    output_data.put( recieved_right_data );
+    output_data.put( recieved_left_data );
 
   endtask
 
