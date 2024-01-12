@@ -1,0 +1,23 @@
+# Current time Mon Jan  8 11:32:00 2024
+# ModelSim - Intel FPGA Edition Stack Trace
+# Program = vish
+# Id = "10.5b"
+# Version = "2016.10"
+# Date = "Oct  5 2016"
+# Platform = linuxpe
+# 0    0x085b224f: '<unknown (@0x85b224f)>'
+# 1    0x085b329d: 'dbg_sym_load_block + 0x17d' in '/home/gorruy/intelFPGA/18.1/modelsim_ase/linuxaloem/vish'
+# 2    0x085b3b2e: '<unknown (@0x85b3b2e)>'
+# 3    0x085b3b1f: '<unknown (@0x85b3b1f)>'
+# 4    0x085b61e3: 'parser_sym_load_block + 0xc3' in '/home/gorruy/intelFPGA/18.1/modelsim_ase/linuxaloem/vish'
+# 5    0x0836c700: 'tclprim_ParserGetFullPath + 0x1e0' in '/home/gorruy/intelFPGA/18.1/modelsim_ase/linuxaloem/vish'
+# 6    0x084c7901: 'TclInvokeStringCommand + 0x71' in '/home/gorruy/intelFPGA/18.1/modelsim_ase/linuxaloem/vish'
+# 7    0x084cc41d: '<unknown (@0x84cc41d)>'
+# 8    0x0851503a: '<unknown (@0x851503a)>'
+# 9    0x0851d9dc: '<unknown (@0x851d9dc)>'
+# 10   0x084ce59c: 'TclEvalObjEx + 0x6c' in '/home/gorruy/intelFPGA/18.1/modelsim_ase/linuxaloem/vish'
+# 11   0x084cea36: 'Tcl_EvalObjEx + 0x36' in '/home/gorruy/intelFPGA/18.1/modelsim_ase/linuxaloem/vish'
+# 12   0xf71c7eac: 'Itcl_EvalMemberCode + 0x3cc' in '/home/gorruy/intelFPGA/18.1/modelsim_ase/bin/../linux/itcl3.4/libitcl3.4.so'
+# 13   0x0db4462b: '<unknown (@0xdb4462b)>'
+# 14   0x09d2457b: '<unknown (@0x9d2457b)>'
+# 15   0x00006a5d: '<unknown (@0x6a5d)>'
