@@ -1,6 +1,6 @@
 vlib work
 
-vlog -sv ../rtl/deserializer.sv
+vlog -sv ../rtl/priority_encoder.sv
 vlog -sv top_tb.sv
 
 vsim -novopt top_tb

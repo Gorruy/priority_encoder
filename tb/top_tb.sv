@@ -1,20 +1,21 @@
 module top_tb;
 
   parameter NUMBER_OF_TEST_RUNS = 100;
-  parameter DATA_BUS_WIDTH      = 16;
+  parameter WIDTH      = 16;
 
-  bit                          clk;
-  logic                        srst;
-  bit                          srst_done;
+  bit                 clk;
+  logic               srst;
 
-  logic                        data;
-  logic                        data_val;
-
-  logic [DATA_BUS_WIDTH - 1:0] deser_data;
-  logic                        deser_data_val;
+  logic [WIDTH - 1:0] data;
+  logic               data_val_i;
+  logic [WIDTH - 1:0] data_left;
+  logic [WIDTH - 1:0] data_right;
+  logic               data_val_o;
 
   // flag to indicate if there is an error
   bit test_succeed;
+
+  logic srst_done;
 
   initial forever #5 clk = !clk;
 
@@ -23,26 +24,27 @@ module top_tb;
 
   initial 
     begin
-      srst <= 1'b0;
+      srst      <= 1'b0;
       ##1;
-      srst <= 1'b1;
+      srst      <= 1'b1;
       ##1;
-      srst <= 1'b0;
-      srst_done = 1'b1;
+      srst      <= 1'b0;
+      srst_done <= 1'b1;
     end
 
-  deserializer #(
-    .DATA_BUS_WIDTH ( DATA_BUS_WIDTH )
+  priority_encoder #(
+    .WIDTH        ( WIDTH      )
   ) DUT ( 
-    .clk_i            ( clk              ),
-    .srst_i           ( srst             ),
-    .deser_data_o     ( deser_data       ),
-    .deser_data_val_o ( deser_data_val   ),
-    .data_i           ( data             ),
-    .data_val_i       ( data_val         )
+    .clk_i        ( clk        ),
+    .srst_i       ( srst       ),
+    .data_i       ( data       ),
+    .data_val_o   ( data_val_o ),
+    .data_left_o  ( data_left  ),
+    .data_right_o ( data_right ),
+    .data_val_i   ( data_val_i )
   );
 
-  typedef logic queued_data_t[$:DATA_BUS_WIDTH - 1];
+  typedef logic queued_data_t[$:WIDTH - 1];
 
   mailbox #( queued_data_t ) output_data    = new(2);
   mailbox #( queued_data_t ) input_data     = new(1);
@@ -62,11 +64,11 @@ module top_tb;
     delay = $urandom_range(10, 0);
     ##(delay);
 
-    data     <= data_to_send;
-    data_val <= 1'b1;
+    data       <= { << {data_to_send} };
+    data_val_i <= 1;
     ## 1;
-    data     <= '0;
-    data_val <= '0; 
+    data       <= '0;
+    data_val_i <= '0; 
 
   endtask
 
@@ -80,8 +82,6 @@ module top_tb;
     input_data.get( i_data );
     output_data.get( o_data );
     
-    
-    
   endtask
 
   task generate_transaction ( mailbox #( queued_data_t ) generated_data );
@@ -90,7 +90,7 @@ module top_tb;
 
     data_to_send = {};
 
-    for ( int i = 0; i < DATA_BUS_WIDTH; i++ ) begin
+    for ( int i = 0; i < WIDTH; i++ ) begin
       data_to_send.push_back( $urandom_range( 1, 0 ) );
     end
 
@@ -120,7 +120,7 @@ module top_tb;
     recieved_right_data = {};
     recieved_left_data  = {};
     
-    wait ( data_val )
+    wait ( data_val_o )
     recieved_right_data <= { << { data_right } };
     recieved_left_data  <= { << { data_left } };
 
@@ -130,9 +130,9 @@ module top_tb;
   endtask
 
   initial begin
-    data         <= '0;
-    data_val     <= 0;
-    test_succeed <= 1;
+    data           <= '0;
+    data_val_i     <= 0;
+    test_succeed   <= 1;
 
     $display("Simulation started!");
     wait( srst_done );

@@ -11,8 +11,9 @@ module priority_encoder #(
   output logic               data_val_o
 );
 
-localparam MIDDLE = $clog2(WIDTH);
-logic pointer;
+localparam MIDDLE = $clog2(WIDTH) >> 1;
+
+logic [(MIDDLE << 1) - 1:0] pointer;
 
 always_ff @(posedge clk_i)
   begin
@@ -24,10 +25,10 @@ always_ff @(posedge clk_i)
       end
     else
       begin
+        pointer <= (MIDDLE - 1)'(MIDDLE - 1);
         if ( data_val_i == 1 )
           begin
-            pointer <= MIDDLE - 1;
-            data_right_o <= ( ( ~data_i + 1 ) ^ data_i );
+            data_right_o <= (~data_i + 1) & data_i;
             for ( int i = 0; i < MIDDLE; i++ )
               begin
                 if ( ( data_i >> pointer ) == 1)
@@ -37,12 +38,14 @@ always_ff @(posedge clk_i)
                 else
                   pointer <= pointer + ( ( WIDTH - 1 - pointer ) >> 1 );
               end
-            data_left_o <= { (WIDTH - 1 - pointer)'( data_i >> pointer ), (WIDTH - 1 - pointer)'(0) };
+            data_left_o <= { data_i >> pointer };
           end
         else
-          data_left_o  <= '0;
-          data_right_o <= '0;
-          data_val_o   <= 0;
+          begin
+            data_left_o  <= '0;
+            data_right_o <= '0;
+            data_val_o   <= 0;
+          end
       end
   end
 
