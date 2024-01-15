@@ -77,10 +77,14 @@ module top_tb;
                     );
     
     queued_data_t i_data;
-    queued_data_t o_data;
+    queued_data_t o_data_l;
+    queued_data_t o_data_r;
 
     input_data.get( i_data );
-    output_data.get( o_data );
+    output_data.get( o_data_l );
+    output_data.get( o_data_r );
+
+    if ( (i_data & o_data_l) <  )
     
   endtask
 
