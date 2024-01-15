@@ -1,6 +1,6 @@
 module top_tb;
 
-  parameter NUMBER_OF_TEST_RUNS = 100;
+  parameter NUMBER_OF_TEST_RUNS = 1000;
   parameter WIDTH      = 16;
 
   bit                 clk;
@@ -79,25 +79,30 @@ module top_tb;
     logic [WIDTH - 1:0] o_data_l;
     logic [WIDTH - 1:0] o_data_r;
     
-    input_data.get( i_data );
     output_data.get( o_data_r );
     output_data.get( o_data_l );
+    input_data.get( i_data );
 
-    if ( i_data == 0 && ( o_data_l != 0 || o_data_r != 0 ) )
-      begin
-        display_error( i_data, o_data_l , o_data_r );
+    // check for zeros in input or output data
+    if ( ( i_data == 0 && ( o_data_l != 0 || o_data_r != 0 ) ) ||
+         ( ( o_data_l == 0 || o_data_r == 0 ) && i_data != 0 ) )
         test_succeed = 0;
-        return;
-      end
-
-    if ( ( $clog2(o_data_l) + 1 != $clog2(i_data) ) ||   // check if there is ones to the left of found leftmost bit
-         ( o_data_l << ( WIDTH - $clog2(o_data_l) ) )  ) // check if there is ones to the right of found leftmost bit
-      begin
-        display_error( i_data, o_data_l , o_data_r );
-        test_succeed = 0;
-        return;
-      end  
     
+    if ( o_data_l == o_data_r && o_data_l != i_data ) // check if original data was only with one set bit
+        test_succeed = 0;
+    else 
+      return;
+
+    if ( ( $clog2(o_data_l) + 1 != $clog2(i_data) ) ||   // check if there is ones to the left of found and real leftmost bits 
+         ( o_data_l << ( WIDTH - $clog2(o_data_l) ) ) )  // check if there is ones to the right of found leftmost bit
+        test_succeed = 0;
+
+    if ( (-i_data) & i_data != o_data_r )
+        test_succeed = 0;
+
+    if ( !test_succeed )
+      display_error( i_data, o_data_l , o_data_r );
+
   endtask
 
   task generate_transaction ( mailbox #( logic [WIDTH - 1:0] ) generated_data );
@@ -117,10 +122,9 @@ module top_tb;
     logic [WIDTH - 1:0] data_to_send;
 
     generated_data.get( data_to_send );
+    input_data.put( data_to_send );
     
     raise_transaction_strobe( data_to_send );
-
-    input_data.put( data_to_send );
 
   endtask
 
@@ -128,11 +132,19 @@ module top_tb;
     
     logic [WIDTH - 1:0] recieved_right_data;
     logic [WIDTH - 1:0] recieved_left_data;
-
-    wait ( data_val_o );
-    recieved_right_data = data_right;
-    recieved_left_data  = data_left;
-
+    
+    while (1)
+      begin
+        @( posedge clk );
+        if ( data_val_i == 1 )
+          begin 
+            #1;
+            recieved_right_data = data_right;
+            recieved_left_data  = data_left;
+            break;
+          end
+      end
+  
     output_data.put( recieved_right_data );
     output_data.put( recieved_left_data );
 
