@@ -11,41 +11,51 @@ module priority_encoder #(
   output logic               data_val_o
 );
 
-localparam MIDDLE = $clog2(WIDTH) >> 1;
+localparam MIDDLE   = WIDTH / 2;
+localparam PTR_SIZE = $clog2(WIDTH);
 
-logic [(MIDDLE << 1) - 1:0] pointer;
+logic [PTR_SIZE - 1:0] current_pointer;
+logic [PTR_SIZE - 1:0] shift;
 
 always_ff @(posedge clk_i)
   begin
     if ( srst_i == 1 )
       begin
-        data_left_o  <= '0;
         data_right_o <= '0;
         data_val_o   <= 0;
       end
     else
       begin
-        pointer <= (MIDDLE - 1)'(MIDDLE - 1);
         if ( data_val_i == 1 )
           begin
             data_right_o <= (~data_i + 1) & data_i;
-            for ( int i = 0; i < MIDDLE; i++ )
-              begin
-                if ( ( data_i >> pointer ) == 1)
-                  break;
-                else if ( ( data_i >> pointer )== 0 )
-                  pointer <= pointer - ( pointer >> 1 );
-                else
-                  pointer <= pointer + ( ( WIDTH - 1 - pointer ) >> 1 );
-              end
-            data_left_o <= { data_i >> pointer };
+            data_val_o   <= 1;
           end
         else
           begin
-            data_left_o  <= '0;
             data_right_o <= '0;
             data_val_o   <= 0;
           end
+      end
+  end
+
+always_comb 
+  begin 
+    current_pointer = (PTR_SIZE)'(MIDDLE);
+    shift           = (PTR_SIZE)'(MIDDLE >> 1);
+    if ( data_val_i == 1 ) 
+      begin
+        for ( int i = 0; i < PTR_SIZE; i++ )
+          begin
+            if ( ( data_i >> current_pointer ) == 1)
+              break;
+            else if ( ( data_i >> current_pointer ) == 0 )
+              current_pointer = current_pointer - shift;
+            else
+              current_pointer = current_pointer + shift;
+            shift = shift >> 1;
+          end
+        data_left_o = (data_i >> current_pointer) << current_pointer;
       end
   end
 
