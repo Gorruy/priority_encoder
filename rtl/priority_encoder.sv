@@ -28,7 +28,7 @@ always_ff @(posedge clk_i)
       begin
         if ( data_val_i == 1 )
           begin
-            data_right_o <= (~data_i + 1) & data_i;
+            data_right_o <= ( ~data_i + 1 ) & data_i;
             data_val_o   <= 1;
           end
         else
@@ -47,7 +47,7 @@ always_comb
       begin
         for ( int i = 0; i < PTR_SIZE; i++ )
           begin
-            if ( ( data_i >> current_pointer ) == 1)
+            if ( ( data_i >> current_pointer ) == 1 )
               break;
             else if ( ( data_i >> current_pointer ) == 0 )
               current_pointer = current_pointer - shift;
@@ -55,7 +55,7 @@ always_comb
               current_pointer = current_pointer + shift;
             shift = shift >> 1;
           end
-        data_left_o = (data_i >> current_pointer) << current_pointer;
+        data_left_o = data_i & ( 1 << current_pointer );
       end
   end
 
