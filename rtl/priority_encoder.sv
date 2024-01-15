@@ -15,13 +15,15 @@ localparam MIDDLE   = WIDTH / 2;
 localparam PTR_SIZE = $clog2(WIDTH);
 
 logic [PTR_SIZE - 1:0] current_pointer;
-logic [PTR_SIZE - 1:0] shift;
+logic [PTR_SIZE - 1:0] pointer_shift;
+logic [WIDTH - 1:0] data_left_buf;
 
 always_ff @(posedge clk_i)
   begin
     if ( srst_i == 1 )
       begin
         data_right_o <= '0;
+        data_left_o  <= '0;
         data_val_o   <= 0;
       end
     else
@@ -29,11 +31,13 @@ always_ff @(posedge clk_i)
         if ( data_val_i == 1 )
           begin
             data_right_o <= ( ~data_i + 1 ) & data_i;
+            data_left_o  <= data_left_buf;
             data_val_o   <= 1;
           end
         else
           begin
             data_right_o <= '0;
+            data_left_o  <= '0;
             data_val_o   <= 0;
           end
       end
@@ -42,7 +46,8 @@ always_ff @(posedge clk_i)
 always_comb 
   begin 
     current_pointer = (PTR_SIZE)'(MIDDLE);
-    shift           = (PTR_SIZE)'(MIDDLE >> 1);
+    pointer_shift   = (PTR_SIZE)'(MIDDLE >> 1);
+    data_left_buf   = '0;
     if ( data_val_i == 1 ) 
       begin
         for ( int i = 0; i < PTR_SIZE; i++ )
@@ -50,12 +55,12 @@ always_comb
             if ( ( data_i >> current_pointer ) == 1 )
               break;
             else if ( ( data_i >> current_pointer ) == 0 )
-              current_pointer = current_pointer - shift;
+              current_pointer = current_pointer - pointer_shift;
             else
-              current_pointer = current_pointer + shift;
-            shift = shift >> 1;
+              current_pointer = current_pointer + pointer_shift;
+            pointer_shift = pointer_shift >> 1;
           end
-        data_left_o = data_i & ( 1 << current_pointer );
+        data_left_buf = data_i & ( 1 << current_pointer );
       end
   end
 

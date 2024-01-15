@@ -44,27 +44,26 @@ module top_tb;
     .data_val_i   ( data_val_i )
   );
 
-  typedef logic queued_data_t[$:WIDTH - 1];
+  mailbox #( logic [WIDTH - 1:0] ) output_data    = new(2);
+  mailbox #( logic [WIDTH - 1:0] ) input_data     = new(1);
+  mailbox #( logic [WIDTH - 1:0] ) generated_data = new(1);
 
-  mailbox #( queued_data_t ) output_data    = new(2);
-  mailbox #( queued_data_t ) input_data     = new(1);
-  mailbox #( queued_data_t ) generated_data = new(1);
-
-  function void display_error ( input queued_data_t in,  
-                                input queued_data_t out
+  function void display_error ( input logic [WIDTH - 1:0] in,  
+                                input logic [WIDTH - 1:0] out_l,
+                                input logic [WIDTH - 1:0] out_r
                               );
-    $display( "expected values:%p, result value:%p", in, out );
+    $error( "sended data:%b, result value:%b, %b", in, out_l, out_r );
 
   endfunction
 
-  task raise_transaction_strobe( input queued_data_t data_to_send ); 
+  task raise_transaction_strobe( input logic [WIDTH - 1:0] data_to_send ); 
     
     // data comes at random moment
     int delay;
     delay = $urandom_range(10, 0);
     ##(delay);
 
-    data       <= { << {data_to_send} };
+    data       <= data_to_send;
     data_val_i <= 1;
     ## 1;
     data       <= '0;
@@ -72,41 +71,50 @@ module top_tb;
 
   endtask
 
-  task compare_data ( mailbox #( queued_data_t ) input_data,
-                      mailbox #( queued_data_t ) output_data
+  task compare_data ( mailbox #( logic [WIDTH - 1:0] ) input_data,
+                      mailbox #( logic [WIDTH - 1:0] ) output_data
                     );
     
-    queued_data_t i_data;
-    queued_data_t o_data_l;
-    queued_data_t o_data_r;
-
+    logic [WIDTH - 1:0] i_data;
+    logic [WIDTH - 1:0] o_data_l;
+    logic [WIDTH - 1:0] o_data_r;
+    
     input_data.get( i_data );
-    output_data.get( o_data_l );
     output_data.get( o_data_r );
+    output_data.get( o_data_l );
 
-    if ( (i_data & o_data_l) <  )
+    if ( i_data == 0 && ( o_data_l != 0 || o_data_r != 0 ) )
+      begin
+        display_error( i_data, o_data_l , o_data_r );
+        test_succeed = 0;
+        return;
+      end
+
+    if ( ( $clog2(o_data_l) + 1 != $clog2(i_data) ) ||   // check if there is ones to the left of found leftmost bit
+         ( o_data_l << ( WIDTH - $clog2(o_data_l) ) )  ) // check if there is ones to the right of found leftmost bit
+      begin
+        display_error( i_data, o_data_l , o_data_r );
+        test_succeed = 0;
+        return;
+      end  
     
   endtask
 
-  task generate_transaction ( mailbox #( queued_data_t ) generated_data );
+  task generate_transaction ( mailbox #( logic [WIDTH - 1:0] ) generated_data );
     
-    queued_data_t data_to_send;
+    logic [WIDTH - 1:0] data_to_send;
 
-    data_to_send = {};
-
-    for ( int i = 0; i < WIDTH; i++ ) begin
-      data_to_send.push_back( $urandom_range( 1, 0 ) );
-    end
+    data_to_send = $urandom_range( 2**WIDTH - 1, 0 );
 
     generated_data.put( data_to_send );
 
   endtask
 
-  task send_data ( mailbox #( queued_data_t ) input_data,
-                   mailbox #( queued_data_t ) generated_data
+  task send_data ( mailbox #( logic [WIDTH - 1:0] ) input_data,
+                   mailbox #( logic [WIDTH - 1:0] ) generated_data
                  );
 
-    queued_data_t data_to_send;
+    logic [WIDTH - 1:0] data_to_send;
 
     generated_data.get( data_to_send );
     
@@ -116,17 +124,14 @@ module top_tb;
 
   endtask
 
-  task read_data ( mailbox #( queued_data_t ) output_data );
+  task read_data ( mailbox #( logic [WIDTH - 1:0] ) output_data );
     
-    queued_data_t recieved_right_data;
-    queued_data_t recieved_left_data;
+    logic [WIDTH - 1:0] recieved_right_data;
+    logic [WIDTH - 1:0] recieved_left_data;
 
-    recieved_right_data = {};
-    recieved_left_data  = {};
-    
-    wait ( data_val_o )
-    recieved_right_data <= { << { data_right } };
-    recieved_left_data  <= { << { data_left } };
+    wait ( data_val_o );
+    recieved_right_data = data_right;
+    recieved_left_data  = data_left;
 
     output_data.put( recieved_right_data );
     output_data.put( recieved_left_data );
