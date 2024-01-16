@@ -30,7 +30,7 @@ always_ff @(posedge clk_i)
       begin
         if ( data_val_i == 1 )
           begin
-            data_right_o <= ( ~data_i + 1 ) & data_i;
+            data_right_o <= (WIDTH)'( ~data_i + 1 ) & data_i;
             data_left_o  <= data_left_buf;
             data_val_o   <= 1;
           end
@@ -50,18 +50,23 @@ always_comb
     data_left_buf   = '0;
     if ( data_val_i == 1 ) 
       begin
-        for ( int i = 0; i < PTR_SIZE; i++ )
+        if ( data_i <= 1 )
+          data_left_buf <= data_i;
+        else
           begin
-            if ( ( data_i >> current_pointer ) == 1 )
-              break;
-            else if ( ( data_i >> current_pointer ) == 0 )
-              current_pointer = current_pointer - pointer_shift;
-            else
-              current_pointer = current_pointer + pointer_shift;
-            pointer_shift = pointer_shift >> 1;
+            for ( int i = 0; i <= PTR_SIZE; i++ )
+              begin
+                if ( ( data_i >> current_pointer ) == 1 )
+                  break;
+                else if ( ( data_i >> current_pointer ) == 0 )
+                  current_pointer = current_pointer - pointer_shift;
+                else
+                  current_pointer = current_pointer + pointer_shift;
+                pointer_shift = pointer_shift >> 1;
+              end
+            data_left_buf = data_i & (WIDTH)'( 1 << current_pointer );
           end
-        data_left_buf = data_i & ( 1 << current_pointer );
-      end
+        end
   end
 
 endmodule

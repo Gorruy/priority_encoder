@@ -1,45 +1,50 @@
-module deserializer_top (
+module priority_encoder_top (
   input  logic        clk_i,
   input  logic        srst_i,
 
-  input  logic        data_i,
+  input  logic [15:0] data_i,
   input  logic        data_val_i,
-  output logic [15:0] deser_data_o,
-  output logic        deser_data_val_o
+
+  output logic [15:0] data_left_o,
+  output logic [15:0] data_right_o,
+  output logic        data_val_o
 );
 
   logic        srst;
 
-  logic        data;
-  logic        data_val;
+  logic [15:0] data;
+  logic        data_val_input;
 
-  logic [15:0] deser_data;
-  logic        deser_data_val;
+  logic [15:0] data_left;
+  logic [15:0] data_right;
+  logic        data_val_output;
 
   always_ff @( posedge clk_i )
     begin
-      srst     <= srst_i;
-      data     <= data_i;
-      data_val <= data_val_i; 
+      srst           <= srst_i;
+      data           <= data_i;
+      data_val_input <= data_val_i; 
     end 
 
-  deserializer #(
-    .DATA_BUS_WIDTH   ( 16             )
-  ) deserializer (
-    .clk_i            ( clk_i          ),
-    .srst_i           ( srst           ),
+  priority_encoder #(
+    .WIDTH        ( 16              )
+  ) priority_encoder (
+    .clk_i        ( clk_i           ),
+    .srst_i       ( srst            ),
 
-    .data_i           ( data           ),
-    .data_val_i       ( data_val       ),
+    .data_i       ( data            ),
+    .data_val_i   ( data_val_input  ),
 
-    .deser_data_o     ( deser_data     ),
-    .deser_data_val_o ( deser_data_val ),  
+    .data_left_o  ( data_left       ),
+    .data_right_o ( data_right      ),
+    .data_val_o   ( data_val_output ) 
 );
 
   always_ff @( posedge clk_i )
     begin
-      deser_data_o     <= deser_data;
-      deser_data_val_o <= deser_data_val;
+      data_left_o  <= data_left;
+      data_right_o <= data_right;
+      data_val_o   <= data_val_output;
     end
 
 

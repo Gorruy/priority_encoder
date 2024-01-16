@@ -1,6 +1,6 @@
 module top_tb;
 
-  parameter NUMBER_OF_TEST_RUNS = 1000;
+  parameter NUMBER_OF_TEST_RUNS = 1000000;
   parameter WIDTH      = 16;
 
   bit                 clk;
@@ -88,20 +88,21 @@ module top_tb;
          ( ( o_data_l == 0 || o_data_r == 0 ) && i_data != 0 ) )
         test_succeed = 0;
     
-    if ( o_data_l == o_data_r && o_data_l != i_data ) // check if original data was only with one set bit
-        test_succeed = 0;
-    else 
-      return;
+    if ( o_data_l == o_data_r && o_data_l == i_data ) // check if original data was only with one set bit
+        return;
 
     if ( ( $clog2(o_data_l) + 1 != $clog2(i_data) ) ||   // check if there is ones to the left of found and real leftmost bits 
          ( o_data_l << ( WIDTH - $clog2(o_data_l) ) ) )  // check if there is ones to the right of found leftmost bit
         test_succeed = 0;
 
-    if ( (-i_data) & i_data != o_data_r )
+    if ( ( (-i_data) & i_data ) != o_data_r )
         test_succeed = 0;
 
-    if ( !test_succeed )
-      display_error( i_data, o_data_l , o_data_r );
+    if ( test_succeed != 1 )
+      begin
+        display_error( i_data, o_data_l , o_data_r );
+        $stop();
+      end
 
   endtask
 
