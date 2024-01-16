@@ -52,7 +52,7 @@ module top_tb;
                                 input logic [WIDTH - 1:0] out_l,
                                 input logic [WIDTH - 1:0] out_r
                               );
-    $error( "sended data:%b, result value:%b, %b", in, out_l, out_r );
+    $error( "sended data:%b, found left bit:%b, found right bit:%b", in, out_l, out_r );
 
   endfunction
 
