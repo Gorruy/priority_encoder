@@ -137,9 +137,8 @@ module top_tb;
     while (1)
       begin
         @( posedge clk );
-        if ( data_val_i == 1 )
-          begin 
-            #1;
+        if ( data_val_o == 1 )
+          begin   
             recieved_right_data = data_right;
             recieved_left_data  = data_left;
             break;
