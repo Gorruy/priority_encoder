@@ -16,7 +16,7 @@ localparam PTR_SIZE = $clog2(WIDTH);
 
 logic [PTR_SIZE - 1:0] current_pointer;
 logic [PTR_SIZE - 1:0] pointer_shift;
-logic [WIDTH - 1:0] data_left_buf;
+logic [WIDTH - 1:0]    data_left_buf;
 
 always_ff @(posedge clk_i)
   begin

@@ -83,8 +83,7 @@ module top_tb;
     output_data.get( o_data_l );
     input_data.get( i_data );
 
-    // check for zeros in input or output data
-    if ( ( i_data === '0 && ( o_data_l !== '0 || o_data_r !== '0 ) ) || // input_data zero and output is
+    if ( ( i_data === '0 && ( o_data_l !== '0 || o_data_r !== '0 ) ) || // input_data zero and output is not
          ( ( o_data_l === '0 || o_data_r === '0 ) && i_data != '0 ) )   // input_data is not zero but output is
         test_succeed = '0;
     
@@ -157,7 +156,7 @@ module top_tb;
     test_succeed   <= 1'b1;
 
     $display("Simulation started!");
-    wait( srst_done );
+    wait( srst_done === 1'b1 );
 
     repeat ( NUMBER_OF_TEST_RUNS )
     begin
