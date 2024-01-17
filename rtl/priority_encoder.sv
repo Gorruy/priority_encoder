@@ -24,7 +24,7 @@ always_ff @(posedge clk_i)
       begin
         data_right_o <= '0;
         data_left_o  <= '0;
-        data_val_o   <= 0;
+        data_val_o   <= 1'b0;
       end
     else
       begin
@@ -32,13 +32,13 @@ always_ff @(posedge clk_i)
           begin
             data_right_o <= (WIDTH)'( ~data_i + 1 ) & data_i;
             data_left_o  <= data_left_buf;
-            data_val_o   <= 1;
+            data_val_o   <= 1'b1;
           end
         else
           begin
             data_right_o <= '0;
             data_left_o  <= '0;
-            data_val_o   <= 0;
+            data_val_o   <= 1'b0;
           end
       end
   end
@@ -48,23 +48,23 @@ always_comb
     current_pointer = (PTR_SIZE)'(MIDDLE);
     pointer_shift   = (PTR_SIZE)'(MIDDLE >> 1);
     data_left_buf   = '0;
-    if ( data_val_i == 1 ) 
+    if ( data_val_i == 1'b1 ) 
       begin
-        if ( data_i <= 1 )
+        if ( data_i <= (WIDTH)'(1) )
           data_left_buf <= data_i;
         else
           begin
             for ( int i = 0; i <= PTR_SIZE; i++ )
               begin
-                if ( ( data_i >> current_pointer ) == 1 )
+                if ( ( data_i >> current_pointer ) == (WIDTH)'(1) )
                   break;
-                else if ( ( data_i >> current_pointer ) == 0 )
+                else if ( ( data_i >> current_pointer ) == '0 )
                   current_pointer = current_pointer - pointer_shift;
                 else
                   current_pointer = current_pointer + pointer_shift;
                 pointer_shift = pointer_shift >> 1;
               end
-            data_left_buf = data_i & (WIDTH)'( 1 << current_pointer );
+            data_left_buf = data_i & ( (WIDTH)'(1) << current_pointer );
           end
         end
   end

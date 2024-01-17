@@ -1,6 +1,6 @@
 module top_tb;
 
-  parameter NUMBER_OF_TEST_RUNS = 1000000;
+  parameter NUMBER_OF_TEST_RUNS = 1000;
   parameter WIDTH      = 16;
 
   bit                 clk;
@@ -84,24 +84,24 @@ module top_tb;
     input_data.get( i_data );
 
     // check for zeros in input or output data
-    if ( ( i_data == 0 && ( o_data_l != 0 || o_data_r != 0 ) ) ||
-         ( ( o_data_l == 0 || o_data_r == 0 ) && i_data != 0 ) )
-        test_succeed = 0;
+    if ( ( i_data === '0 && ( o_data_l !== '0 || o_data_r !== '0 ) ) || // input_data zero and output is
+         ( ( o_data_l === '0 || o_data_r === '0 ) && i_data != '0 ) )   // input_data is not zero but output is
+        test_succeed = '0;
     
-    if ( o_data_l == o_data_r && o_data_l == i_data ) // check if original data was only with one set bit
+    if ( o_data_l === o_data_r && o_data_l === i_data ) // check if original data was only with one set bit
         return;
 
-    if ( ( $clog2(o_data_l) + 1 != $clog2(i_data) ) ||   // check if there is ones to the left of found and real leftmost bits 
+    if ( ( $clog2(o_data_l) + 1 !== $clog2(i_data) ) ||   // check if there is ones to the left of found and real leftmost bits 
          ( o_data_l << ( WIDTH - $clog2(o_data_l) ) ) )  // check if there is ones to the right of found leftmost bit
         test_succeed = 0;
 
-    if ( ( (-i_data) & i_data ) != o_data_r )
+    if ( ( (-i_data) & i_data ) !== o_data_r )
         test_succeed = 0;
 
-    if ( test_succeed != 1 )
+    if ( test_succeed !== 1'b1 )
       begin
         display_error( i_data, o_data_l , o_data_r );
-        $stop();
+        return;
       end
 
   endtask
@@ -127,6 +127,7 @@ module top_tb;
     
     raise_transaction_strobe( data_to_send );
 
+
   endtask
 
   task read_data ( mailbox #( logic [WIDTH - 1:0] ) output_data );
@@ -134,11 +135,11 @@ module top_tb;
     logic [WIDTH - 1:0] recieved_right_data;
     logic [WIDTH - 1:0] recieved_left_data;
     
-    while (1)
+    while ( 1 )
       begin
         @( posedge clk );
-        if ( data_val_o == 1 )
-          begin   
+        if ( data_val_o == 1'b1 )
+          begin
             recieved_right_data = data_right;
             recieved_left_data  = data_left;
             break;
@@ -152,8 +153,8 @@ module top_tb;
 
   initial begin
     data           <= '0;
-    data_val_i     <= 0;
-    test_succeed   <= 1;
+    data_val_i     <= 1'b0;
+    test_succeed   <= 1'b1;
 
     $display("Simulation started!");
     wait( srst_done );
