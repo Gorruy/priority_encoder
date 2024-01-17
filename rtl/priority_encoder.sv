@@ -28,7 +28,7 @@ always_ff @(posedge clk_i)
       end
     else
       begin
-        if ( data_val_i == 1 )
+        if ( data_val_i )
           begin
             data_right_o <= (WIDTH)'( ~data_i + 1 ) & data_i;
             data_left_o  <= data_left_buf;

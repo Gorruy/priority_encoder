@@ -64,10 +64,10 @@ module top_tb;
     ##(delay);
 
     data       <= data_to_send;
-    data_val_i <= 1;
+    data_val_i <= 1'b1;
     ## 1;
     data       <= '0;
-    data_val_i <= '0; 
+    data_val_i <= 1'b0; 
 
   endtask
 
@@ -97,7 +97,7 @@ module top_tb;
     if ( ( (-i_data) & i_data ) !== o_data_r )
         test_succeed = 0;
 
-    if ( test_succeed !== 1'b1 )
+    if ( !test_succeed )
       begin
         display_error( i_data, o_data_l , o_data_r );
         return;
@@ -137,7 +137,7 @@ module top_tb;
     while ( 1 )
       begin
         @( posedge clk );
-        if ( data_val_o == 1'b1 )
+        if ( data_val_o === 1'b1 )
           begin
             recieved_right_data = data_right;
             recieved_left_data  = data_left;
