@@ -48,7 +48,7 @@ always_comb
     current_pointer = (PTR_SIZE)'(MIDDLE);
     pointer_shift   = (PTR_SIZE)'(MIDDLE >> 1);
     data_left_buf   = '0;
-    if ( data_val_i == 1'b1 ) 
+    if ( data_val_i ) 
       begin
         if ( data_i <= (WIDTH)'(1) )
           data_left_buf <= data_i;
