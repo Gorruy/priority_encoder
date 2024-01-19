@@ -11,11 +11,6 @@ module priority_encoder #(
   output logic               data_val_o
 );
 
-localparam MIDDLE   = WIDTH / 2;
-localparam PTR_SIZE = $clog2(WIDTH);
-
-logic [PTR_SIZE - 1:0] current_pointer;
-logic [PTR_SIZE - 1:0] pointer_shift;
 logic [WIDTH - 1:0]    data_left_buf;
 logic [WIDTH - 1:0]    data_right_buf;
 
@@ -36,11 +31,7 @@ always_ff @(posedge clk_i)
             data_val_o   <= 1'b1;
           end
         else
-          begin
-            data_right_o <= '0;
-            data_left_o  <= '0;
-            data_val_o   <= 1'b0;
-          end
+          data_val_o   <= 1'b0;
       end
   end
 
@@ -48,35 +39,19 @@ assign data_right_buf = (WIDTH)'( ~data_i + 1 ) & data_i;
 
 always_comb 
   begin 
-    current_pointer = (PTR_SIZE)'(MIDDLE);
-    pointer_shift   = (PTR_SIZE)'(MIDDLE >> 1);
     data_left_buf   = '0;
 
     if ( data_val_i ) 
       begin
-        if ( data_i <= (WIDTH)'(1) )
-          data_left_buf <= data_i;
-        else
+        for ( int i = WIDTH - 1; i >= 0; i-- )
           begin
-            for ( int i = 0; i < PTR_SIZE; i++ )
+            if ( data_i[i] )
               begin
-                if ( ( data_i >> current_pointer ) == (WIDTH)'(1) )
-                  begin
-                    break;
-                  end
-                else if ( ( data_i >> current_pointer ) == '0 )
-                  begin
-                    current_pointer = current_pointer - pointer_shift;
-                  end
-                else
-                  begin
-                    current_pointer = current_pointer + pointer_shift;
-                  end
-                pointer_shift = pointer_shift >> 1;
+                data_left_buf = (WIDTH)'(1 << i);
+                break;
               end
-            data_left_buf = data_i & ( (WIDTH)'(1) << current_pointer );
           end
-        end
+      end
   end
 
 endmodule
