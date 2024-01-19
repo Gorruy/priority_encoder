@@ -48,20 +48,27 @@ always_comb
     current_pointer = (PTR_SIZE)'(MIDDLE);
     pointer_shift   = (PTR_SIZE)'(MIDDLE >> 1);
     data_left_buf   = '0;
+
     if ( data_val_i ) 
       begin
         if ( data_i <= (WIDTH)'(1) )
           data_left_buf <= data_i;
         else
           begin
-            for ( int i = 0; i <= PTR_SIZE; i++ )
+            for ( int i = 0; i < PTR_SIZE; i++ )
               begin
                 if ( ( data_i >> current_pointer ) == (WIDTH)'(1) )
-                  break;
+                  begin
+                    break;
+                  end
                 else if ( ( data_i >> current_pointer ) == '0 )
-                  current_pointer = current_pointer - pointer_shift;
+                  begin
+                    current_pointer = current_pointer - pointer_shift;
+                  end
                 else
-                  current_pointer = current_pointer + pointer_shift;
+                  begin
+                    current_pointer = current_pointer + pointer_shift;
+                  end
                 pointer_shift = pointer_shift >> 1;
               end
             data_left_buf = data_i & ( (WIDTH)'(1) << current_pointer );
