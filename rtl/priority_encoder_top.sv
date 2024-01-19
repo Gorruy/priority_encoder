@@ -2,21 +2,21 @@ module priority_encoder_top (
   input  logic        clk_i,
   input  logic        srst_i,
 
-  input  logic [15:0] data_i,
+  input  logic [49:0] data_i,
   input  logic        data_val_i,
 
-  output logic [15:0] data_left_o,
-  output logic [15:0] data_right_o,
+  output logic [49:0] data_left_o,
+  output logic [49:0] data_right_o,
   output logic        data_val_o
 );
 
   logic        srst;
 
-  logic [15:0] data;
+  logic [49:0] data;
   logic        data_val_input;
 
-  logic [15:0] data_left;
-  logic [15:0] data_right;
+  logic [49:0] data_left;
+  logic [49:0] data_right;
   logic        data_val_output;
 
   always_ff @( posedge clk_i )
@@ -27,7 +27,7 @@ module priority_encoder_top (
     end 
 
   priority_encoder #(
-    .WIDTH        ( 16              )
+    .WIDTH        ( 50              )
   ) priority_encoder (
     .clk_i        ( clk_i           ),
     .srst_i       ( srst            ),
