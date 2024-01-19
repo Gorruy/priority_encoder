@@ -20,7 +20,7 @@ logic [WIDTH - 1:0]    data_left_buf;
 
 always_ff @(posedge clk_i)
   begin
-    if ( srst_i == 1 )
+    if ( srst_i )
       begin
         data_right_o <= '0;
         data_left_o  <= '0;

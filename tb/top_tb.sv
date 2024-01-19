@@ -63,11 +63,11 @@ module top_tb;
     delay = $urandom_range(5, 0);
     ##(delay);
 
-    data       <= data_to_send;
-    data_val_i <= 1'b1;
+    data       = data_to_send;
+    data_val_i = 1'b1;
     ## 1;
-    data       <= '0;
-    data_val_i <= 1'b0; 
+    data       = '0;
+    data_val_i = 1'b0; 
 
   endtask
 
@@ -92,7 +92,7 @@ module top_tb;
             ( ( o_data_l === '0 || o_data_r === '0 ) && i_data != '0 ) )    // input_data is not zero but output is
             test_succeed = '0;
 
-        if ( ( $clog2(o_data_l) + 1 !== $clog2(i_data) ) ||   // check if there is ones to the left of found and real leftmost bits 
+        if ( ( $clog2(o_data_l) + 1 !== $clog2(i_data) ) ||   // check if there is ones to the left of found and ref leftmost bits 
             ( o_data_l << ( WIDTH - $clog2(o_data_l) ) ) )    // check if there is ones to the right of found leftmost bit
             test_succeed = 0;
 
