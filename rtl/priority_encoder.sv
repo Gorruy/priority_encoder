@@ -17,6 +17,7 @@ localparam PTR_SIZE = $clog2(WIDTH);
 logic [PTR_SIZE - 1:0] current_pointer;
 logic [PTR_SIZE - 1:0] pointer_shift;
 logic [WIDTH - 1:0]    data_left_buf;
+logic [WIDTH - 1:0]    data_right_buf;
 
 always_ff @(posedge clk_i)
   begin
@@ -30,7 +31,7 @@ always_ff @(posedge clk_i)
       begin
         if ( data_val_i )
           begin
-            data_right_o <= (WIDTH)'( ~data_i + 1 ) & data_i;
+            data_right_o <= data_right_buf;
             data_left_o  <= data_left_buf;
             data_val_o   <= 1'b1;
           end
@@ -42,6 +43,8 @@ always_ff @(posedge clk_i)
           end
       end
   end
+
+assign data_right_buf = (WIDTH)'( ~data_i + 1 ) & data_i;
 
 always_comb 
   begin 
