@@ -31,7 +31,7 @@ always_ff @(posedge clk_i)
             data_val_o   <= 1'b1;
           end
         else
-          data_val_o   <= 1'b0;
+          data_val_o <= 1'b0;
       end
   end
 
@@ -39,7 +39,7 @@ assign data_right_buf = (WIDTH)'( ~data_i + 1 ) & data_i;
 
 always_comb 
   begin 
-    data_left_buf   = '0;
+    data_left_buf = '0;
 
     if ( data_val_i ) 
       begin
