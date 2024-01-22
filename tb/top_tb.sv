@@ -1,7 +1,7 @@
 module top_tb;
 
   parameter NUMBER_OF_TEST_RUNS = 1000;
-  parameter WIDTH      = 131;
+  parameter WIDTH      = 17;
 
   bit                 clk;
   logic               srst;
@@ -90,14 +90,14 @@ module top_tb;
 
         if ( ( i_data === '0 && ( o_data_l !== '0 || o_data_r !== '0 ) ) || // input_data zero and output is not
             ( ( o_data_l === '0 || o_data_r === '0 ) && i_data != '0 ) )    // input_data is not zero but output is
-            test_succeed = '0;
+            test_succeed = 1'b0;
 
         if ( ( $clog2(o_data_l) + 1 !== $clog2(i_data) ) ||   // check if there is ones to the left of found and ref leftmost bits 
             ( o_data_l << ( WIDTH - $clog2(o_data_l) ) ) )    // check if there is ones to the right of found leftmost bit
-            test_succeed = 0;
+            test_succeed = 1'b0;
 
         if ( ( (-i_data) & i_data ) !== o_data_r )
-            test_succeed = 0;
+            test_succeed = 1'b0;
 
         if ( !test_succeed )
           begin
@@ -119,7 +119,7 @@ module top_tb;
       end
 
     for ( int i = 0; i < WIDTH; i++ ) begin
-      data_to_send = 1 << i;
+      data_to_send = (WIDTH)'(1) << i;
       generated_data.put( data_to_send );
     end
 
@@ -168,7 +168,7 @@ module top_tb;
           begin
             if ( time_without_data == 11)
               begin
-                test_succeed = 1;
+                test_succeed = 1'b1;
                 break;
               end
             else
