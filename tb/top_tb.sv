@@ -8,8 +8,8 @@ module top_tb;
 
   logic [WIDTH - 1:0] data;
   logic               data_val_i;
-  logic [WIDTH - 1:0] data_left;
-  logic [WIDTH - 1:0] data_right;
+  logic [WIDTH - 1:0] data_left_o;
+  logic [WIDTH - 1:0] data_right_o;
   logic               data_val_o;
 
   // flag to indicate if there is an error
@@ -33,15 +33,15 @@ module top_tb;
     end
 
   priority_encoder #(
-    .WIDTH        ( WIDTH      )
+    .WIDTH        ( WIDTH        )
   ) DUT ( 
-    .clk_i        ( clk        ),
-    .srst_i       ( srst       ),
-    .data_i       ( data       ),
-    .data_val_o   ( data_val_o ),
-    .data_left_o  ( data_left  ),
-    .data_right_o ( data_right ),
-    .data_val_i   ( data_val_i )
+    .clk_i        ( clk          ),
+    .srst_i       ( srst         ),
+    .data_i       ( data         ),
+    .data_val_o   ( data_val_o   ),
+    .data_left_o  ( data_left_o  ),
+    .data_right_o ( data_right_o ),
+    .data_val_i   ( data_val_i   )
   );
 
   typedef logic [WIDTH - 1:0] data_t;
@@ -178,8 +178,8 @@ module top_tb;
         @( posedge clk );
         if ( data_val_o === 1'b1 )
           begin
-            recieved_left_data  = data_left;
-            recieved_right_data = data_right;
+            recieved_left_data  = data_left_o;
+            recieved_right_data = data_right_o;
       
             output_data.put( recieved_right_data );
             output_data.put( recieved_left_data );
