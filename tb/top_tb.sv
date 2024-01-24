@@ -58,11 +58,11 @@ module top_tb;
 
   endfunction
 
-  task raise_transaction_strobe( input data_t data_to_send ); 
+  task raise_transaction_strobe( input data_t data_to_send, int no_delay ); 
     
     // data comes at random moment
     int delay;
-    delay = $urandom_range(5, 0);
+    delay = $urandom_range(5, 0) * !no_delay;
     ##(delay);
 
     data       = data_to_send;
@@ -130,7 +130,8 @@ module top_tb;
 
   endtask
 
-  task generate_transactions ( mailbox #( data_t ) generated_data );
+  task generate_transactions ( mailbox #( data_t ) generated_data,
+                               input int           no_delay );
 
     data_t data_to_send;
     
@@ -159,7 +160,7 @@ module top_tb;
 
         generated_data.get( data_to_send );
         
-        raise_transaction_strobe( data_to_send );
+        raise_transaction_strobe( data_to_send, no_delay );
         
         input_data.put( data_to_send );
       end
@@ -206,8 +207,27 @@ module top_tb;
     test_succeed   <= 1'b1;
 
     $display("Simulation started!");
-    generate_transactions( generated_data );
+    generate_transactions( generated_data, 0 );
     wait( srst_done === 1'b1 );
+
+    $display("Tests with random delays started!")
+    fork
+      send_data( input_data, generated_data );
+      read_data( output_data );
+    join
+    compare_data( input_data, output_data );
+
+    if ( test_succeed )
+      $display("First test suceed!");
+    else
+      begin
+        $display("Tests with random delay failed! Exit simulation");
+        $stop();
+      end
+
+    $display("Tests withoud time delay started!");
+
+    generate_transactions( generated_data, 1 );
 
     fork
       send_data( input_data, generated_data );
