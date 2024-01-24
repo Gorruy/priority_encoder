@@ -44,19 +44,21 @@ module top_tb;
     .data_val_i   ( data_val_i )
   );
 
-  mailbox #( logic [WIDTH - 1:0] ) output_data    = new();
-  mailbox #( logic [WIDTH - 1:0] ) input_data     = new();
-  mailbox #( logic [WIDTH - 1:0] ) generated_data = new();
+  typedef logic [WIDTH - 1:0] data_t;
 
-  function void display_error ( input logic [WIDTH - 1:0] in,  
-                                input logic [WIDTH - 1:0] out_l,
-                                input logic [WIDTH - 1:0] out_r
+  mailbox #( data_t ) output_data    = new();
+  mailbox #( data_t ) input_data     = new();
+  mailbox #( data_t ) generated_data = new();
+
+  function void display_error ( input data_t in,  
+                                input data_t out_l,
+                                input data_t out_r
                               );
     $error( "sended data:%b, found left bit:%b, found right bit:%b", in, out_l, out_r );
 
   endfunction
 
-  task raise_transaction_strobe( input logic [WIDTH - 1:0] data_to_send ); 
+  task raise_transaction_strobe( input data_t data_to_send ); 
     
     // data comes at random moment
     int delay;
@@ -71,13 +73,45 @@ module top_tb;
 
   endtask
 
-  task compare_data ( mailbox #( logic [WIDTH - 1:0] ) input_data,
-                      mailbox #( logic [WIDTH - 1:0] ) output_data
+  function data_t leftmost_bit_find ( input data_t i_data );
+    data_t left; 
+    left  = '0; 
+
+    for ( int i = WIDTH - 1; i >= 0; i-- )
+      begin
+        if ( i_data[i] === 1'b1 )
+          begin
+            left[i] = 1'b1;
+            return left;
+          end
+      end
+
+    return left;
+  endfunction
+  
+  function data_t rigthmost_bit_find ( input data_t i_data );
+    data_t right;
+    right = '0;
+
+    for ( int i = 0; i < WIDTH; i++ )
+      begin
+        if ( i_data[i] === 1'b1 )
+          begin
+            right[i] = 1'b1;
+            return right;
+          end
+      end
+
+    return right;
+  endfunction
+
+  task compare_data ( mailbox #( data_t ) input_data,
+                      mailbox #( data_t ) output_data
                     );
 
-    logic [WIDTH - 1:0] i_data;
-    logic [WIDTH - 1:0] o_data_l;
-    logic [WIDTH - 1:0] o_data_r;
+    data_t i_data;
+    data_t o_data_l;
+    data_t o_data_r;
     
     while ( input_data.num() )
       begin
@@ -85,32 +119,20 @@ module top_tb;
         output_data.get( o_data_l );
         input_data.get( i_data );
 
-        if ( o_data_l === o_data_r && o_data_l === i_data ) // check if original data was only with one set bit
-          continue;
-
-        if ( ( i_data === '0 && ( o_data_l !== '0 || o_data_r !== '0 ) ) || // input_data zero and output is not
-            ( ( o_data_l === '0 || o_data_r === '0 ) && i_data != '0 ) )    // input_data is not zero but output is
-            test_succeed = 1'b0;
-
-        if ( ( $clog2(o_data_l) + 1 !== $clog2(i_data) ) ||   // check if there is ones to the left of found and ref leftmost bits 
-            ( o_data_l << ( WIDTH - $clog2(o_data_l) ) ) )    // check if there is ones to the right of found leftmost bit
-            test_succeed = 1'b0;
-
-        if ( ( (-i_data) & i_data ) !== o_data_r )
-            test_succeed = 1'b0;
-
-        if ( !test_succeed )
+        if ( leftmost_bit_find(i_data) !== o_data_l ||
+             rigthmost_bit_find(i_data) !== o_data_r )
           begin
-            display_error( i_data, o_data_l , o_data_r );
+            test_succeed = 1'b0;
+            display_error( i_data, o_data_l, o_data_r );
             return;
           end
       end
 
   endtask
 
-  task generate_transactions ( mailbox #( logic [WIDTH - 1:0] ) generated_data );
+  task generate_transactions ( mailbox #( data_t ) generated_data );
 
-    logic [WIDTH - 1:0] data_to_send;
+    data_t data_to_send;
     
     repeat (NUMBER_OF_TEST_RUNS)
       begin
@@ -118,7 +140,7 @@ module top_tb;
         generated_data.put( data_to_send );
       end
 
-    for ( int i = 0; i < WIDTH; i++ ) begin
+    for ( int i = 0; i < WIDTH + 1; i++ ) begin
       data_to_send = (WIDTH)'(1) << i;
       generated_data.put( data_to_send );
     end
@@ -128,12 +150,12 @@ module top_tb;
 
   endtask
 
-  task send_data ( mailbox #( logic [WIDTH - 1:0] ) input_data,
-                   mailbox #( logic [WIDTH - 1:0] ) generated_data
+  task send_data ( mailbox #( data_t ) input_data,
+                   mailbox #( data_t ) generated_data
                  );
     while ( generated_data.num() )
       begin
-        logic [WIDTH - 1:0] data_to_send;
+        data_t data_to_send;
 
         generated_data.get( data_to_send );
         
@@ -144,10 +166,10 @@ module top_tb;
 
   endtask
 
-  task read_data ( mailbox #( logic [WIDTH - 1:0] ) output_data );
+  task read_data ( mailbox #( data_t ) output_data );
     
-    logic [WIDTH - 1:0] recieved_right_data;
-    logic [WIDTH - 1:0] recieved_left_data;
+    data_t recieved_right_data;
+    data_t recieved_left_data;
 
     int time_without_data;
     
