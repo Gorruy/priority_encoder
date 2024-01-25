@@ -152,7 +152,8 @@ module top_tb;
   endtask
 
   task send_data ( mailbox #( data_t ) input_data,
-                   mailbox #( data_t ) generated_data
+                   mailbox #( data_t ) generated_data,
+                   int                 no_delay
                  );
     while ( generated_data.num() )
       begin
@@ -210,31 +211,21 @@ module top_tb;
     generate_transactions( generated_data, 0 );
     wait( srst_done === 1'b1 );
 
-    $display("Tests with random delays started!")
-    fork
-      send_data( input_data, generated_data );
-      read_data( output_data );
-    join
-    compare_data( input_data, output_data );
-
-    if ( test_succeed )
-      $display("First test suceed!");
-    else
-      begin
-        $display("Tests with random delay failed! Exit simulation");
-        $stop();
-      end
-
-    $display("Tests withoud time delay started!");
-
-    generate_transactions( generated_data, 1 );
+    $display("Tests with random delays started!");
 
     fork
-      send_data( input_data, generated_data );
+      send_data( input_data, generated_data, 0 );
       read_data( output_data );
     join
 
-    compare_data( input_data, output_data );
+    $display("Tests without time delay started!");
+
+    fork
+      send_data( generated_data, input_data, 1 );
+      read_data( output_data );
+    join
+
+    compare_data( generated_data, output_data );
     $display("Simulation is over!");
     if ( test_succeed )
       $display("All tests passed!");
