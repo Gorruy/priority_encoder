@@ -46,9 +46,10 @@ module top_tb;
 
   typedef logic [WIDTH - 1:0] data_t;
 
-  mailbox #( data_t ) output_data    = new();
-  mailbox #( data_t ) input_data     = new();
-  mailbox #( data_t ) generated_data = new();
+  mailbox #( data_t ) output_data     = new();
+  mailbox #( data_t ) input_data      = new();
+  mailbox #( data_t ) generated_data1 = new();
+  mailbox #( data_t ) generated_data2 = new();
 
   function void display_error ( input data_t in,  
                                 input data_t out_l,
@@ -130,7 +131,8 @@ module top_tb;
 
   endtask
 
-  task generate_transactions ( mailbox #( data_t ) generated_data,
+  task generate_transactions ( mailbox #( data_t ) generated_data1,
+                               mailbox #( data_t ) generated_data2,
                                input int           no_delay );
 
     data_t data_to_send;
@@ -138,16 +140,19 @@ module top_tb;
     repeat (NUMBER_OF_TEST_RUNS)
       begin
         data_to_send = $urandom_range( 2**WIDTH - 1, 0 );
-        generated_data.put( data_to_send );
+        generated_data1.put( data_to_send );
+        generated_data2.put( data_to_send );
       end
 
     for ( int i = 0; i < WIDTH + 1; i++ ) begin
       data_to_send = (WIDTH)'(1) << i;
-      generated_data.put( data_to_send );
+      generated_data1.put( data_to_send );
+      generated_data2.put( data_to_send );
     end
 
     data_to_send = '1;
-    generated_data.put( data_to_send );
+    generated_data1.put( data_to_send );
+    generated_data2.put( data_to_send );
 
   endtask
 
@@ -192,7 +197,8 @@ module top_tb;
           begin
             if ( time_without_data == 11)
               begin
-                test_succeed = 1'b1;
+                time_without_data = 0;
+                test_succeed      = 1'b1;
                 break;
               end
             else
@@ -208,24 +214,24 @@ module top_tb;
     test_succeed   <= 1'b1;
 
     $display("Simulation started!");
-    generate_transactions( generated_data, 0 );
+    generate_transactions( generated_data1, generated_data2, 0 );
     wait( srst_done === 1'b1 );
 
     $display("Tests with random delays started!");
 
     fork
-      send_data( input_data, generated_data, 0 );
+      send_data( input_data, generated_data1, 0 );
       read_data( output_data );
     join
 
     $display("Tests without time delay started!");
 
     fork
-      send_data( generated_data, input_data, 1 );
+      send_data( input_data, generated_data2, 1 );
       read_data( output_data );
     join
 
-    compare_data( generated_data, output_data );
+    compare_data( input_data, output_data );
     $display("Simulation is over!");
     if ( test_succeed )
       $display("All tests passed!");

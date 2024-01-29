@@ -43,7 +43,7 @@ always_comb
       begin
         if ( data_i[i] )
           begin
-            data_left_buf = (WIDTH)'(1 << i);
+            data_left_buf[i] = 1'b1;
             break;
           end
       end
